@@ -13,27 +13,30 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mccutchen/go-httpbin/v2/httpbin"
+	"github.com/zhqqqy/go-httpbin/v2/httpbin"
 )
 
 const defaultHost = "0.0.0.0"
-const defaultPort = 8080
+const defaultPort = 8301
 
 var (
-	host          string
-	port          int
-	maxBodySize   int64
-	maxDuration   time.Duration
-	httpsCertFile string
-	httpsKeyFile  string
+	host        string
+	port        int
+	maxBodySize int64
+	maxDuration time.Duration
+	//httpsCertFile string
+	//httpsKeyFile  string
+	serveTLS bool
 )
 
 // Main implements the go-httpbin CLI's main() function in a reusable way
 func Main() {
 	flag.StringVar(&host, "host", defaultHost, "Host to listen on")
 	flag.IntVar(&port, "port", defaultPort, "Port to listen on")
-	flag.StringVar(&httpsCertFile, "https-cert-file", "", "HTTPS Server certificate file")
-	flag.StringVar(&httpsKeyFile, "https-key-file", "", "HTTPS Server private key file")
+	//flag.StringVar(&httpsCertFile, "https-cert-file", "", "HTTPS Server certificate file")
+	//flag.StringVar(&httpsKeyFile, "https-key-file", "", "HTTPS Server private key file")
+	flag.BoolVar(&serveTLS, "https", false, "use https server")
+
 	flag.Int64Var(&maxBodySize, "max-body-size", httpbin.DefaultMaxBodySize, "Maximum size of request or response, in bytes")
 	flag.DurationVar(&maxDuration, "max-duration", httpbin.DefaultMaxDuration, "Maximum duration a response may take")
 	flag.Parse()
@@ -70,22 +73,22 @@ func Main() {
 		}
 	}
 
-	if httpsCertFile == "" && os.Getenv("HTTPS_CERT_FILE") != "" {
-		httpsCertFile = os.Getenv("HTTPS_CERT_FILE")
-	}
-	if httpsKeyFile == "" && os.Getenv("HTTPS_KEY_FILE") != "" {
-		httpsKeyFile = os.Getenv("HTTPS_KEY_FILE")
-	}
-
-	var serveTLS bool
-	if httpsCertFile != "" || httpsKeyFile != "" {
-		serveTLS = true
-		if httpsCertFile == "" || httpsKeyFile == "" {
-			fmt.Fprintf(os.Stderr, "Error: https cert and key must both be provided\n\n")
-			flag.Usage()
-			os.Exit(1)
-		}
-	}
+	//if httpsCertFile == "" && os.Getenv("HTTPS_CERT_FILE") != "" {
+	//    httpsCertFile = os.Getenv("HTTPS_CERT_FILE")
+	//}
+	//if httpsKeyFile == "" && os.Getenv("HTTPS_KEY_FILE") != "" {
+	//    httpsKeyFile = os.Getenv("HTTPS_KEY_FILE")
+	//}
+	//
+	//var serveTLS bool
+	//if httpsCertFile != "" || httpsKeyFile != "" {
+	//    serveTLS = true
+	//    if httpsCertFile == "" || httpsKeyFile == "" {
+	//        fmt.Fprintf(os.Stderr, "Error: https cert and key must both be provided\n\n")
+	//        flag.Usage()
+	//        os.Exit(1)
+	//    }
+	//}
 
 	logger := log.New(os.Stderr, "", 0)
 
@@ -138,8 +141,12 @@ func Main() {
 
 	var listenErr error
 	if serveTLS {
+		path := "cert/"
+		//Generate the certificate file
+		httpbin.GenerateCertificate(path)
+		// start https server
 		serverLog("go-httpbin listening on https://%s", listenAddr)
-		listenErr = server.ListenAndServeTLS(httpsCertFile, httpsKeyFile)
+		listenErr = server.ListenAndServeTLS(path+"server.pem", path+"server.key")
 	} else {
 		serverLog("go-httpbin listening on http://%s", listenAddr)
 		listenErr = server.ListenAndServe()

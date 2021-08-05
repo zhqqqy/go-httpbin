@@ -1,3 +1,3 @@
-module github.com/mccutchen/go-httpbin/v2
+module github.com/zhqqqy/go-httpbin/v2
 
 go 1.16

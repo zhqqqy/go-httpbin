@@ -18,10 +18,8 @@ $ go-httpbin --help
 Usage of go-httpbin:
   -host string
       Host to listen on (default "0.0.0.0")
-  -https-cert-file string
-      HTTPS Server certificate file
-  -https-key-file string
-      HTTPS Server private key file
+  -https bool
+      Start by HTTPS Server model (default false)
   -max-body-size int
       Maximum size of request or response, in bytes (default 1048576)
   -max-duration duration
@@ -42,6 +40,10 @@ $ openssl ecparam -genkey -name secp384r1 -out server.key
 $ openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
 $ go-httpbin -host 127.0.0.1 -port 8081 -https-cert-file ./server.crt -https-key-file ./server.key
 ```
+### Run https server
+the direct of cert has include `ca.key` & `ca.pem`. if you start by -https=true,then go-httpbin  will automatically generate the server certificate
+and load it. Relying on this feature we can deploy many https servers in k8s.
+you can used this ca certificate generate the client certificate.
 
 Docker images are published to [Docker Hub][docker-hub]:
 
